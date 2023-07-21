@@ -1,5 +1,5 @@
 // canvas variables 
-const canvas = document.getElementById("canvas")
+const canvas = document.getElementById("canvas1")
 const context = canvas.getContext("2d");
 
 // camera, distance to viewport, spheres objects
@@ -88,19 +88,19 @@ function vec_subtraction(a, b){
  *      t_max - maximum render distance 
  */
 function intersect_ray_sphere(O, D, sphere){
-    r = sphere.radius
-    CO = vec_subtraction(O, sphere.center)
-    a = dot_product(D, D)
-    b = 2 * dot_product(CO, D)
-    c = dot_product(CO, CO) - r*r
+    let r = sphere.radius
+    let CO = vec_subtraction(O, sphere.center)
+    let a = dot_product(D, D)
+    let b = 2 * dot_product(CO, D)
+    let c = dot_product(CO, CO) - r*r
 
     discriminant = b * b - 4 * a * c
     if (discriminant < 0){
         return [Infinity, Infinity]
     }
 
-    t1 = (-b + Math.sqrt(discriminant)) / (2*a)
-    t2 = (-b - Math.sqrt(discriminant)) / (2*a)
+    let t1 = (-b + Math.sqrt(discriminant)) / (2*a)
+    let t2 = (-b - Math.sqrt(discriminant)) / (2*a)
     return [t1, t2]
 }
 
