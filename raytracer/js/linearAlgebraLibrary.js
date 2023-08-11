@@ -70,3 +70,31 @@ function vecDivision(vec, scalar) {
 function magnitude(vec){
     return Math.sqrt(vec[0] ** 2 + vec[1] ** 2 + vec[2] ** 2)
 }
+
+/**
+ * takes in a 3 component vector and returns the magnitude of the vector 
+ * parameters 
+ */
+function normalize(vec) {
+    mag = magnitude(vec);
+    return [vec[0] / mag, vec[1] / mag, vec[2] / mag];
+}
+
+/**
+ * Takes in 2 arrays of ints (soon vec3s) and calculates the cross product 
+ * between the two  
+ * parameters 
+ *      v - the first vector (second clockwise)
+ *      w - the second vector (first in clockwise) 
+ */
+function crossProduct(v, w) {
+    // soon to uncomment after code refactor 
+    //let x = v.y * w.z - v.z * w.y;
+    //let y = v.z * w.x - v.x * w.z; 
+    //let z = v.x * w.y - v.y * w.x;
+    //let normal = vec3(x, y, z);
+    let x = v[1] * w[2] - v[2] * w[1];
+    let y = v[2] * w[0] - v[0] * w[2];
+    let z = v[0] * w[1] - v[1] * w[0];
+    return [x, y, z];
+}
