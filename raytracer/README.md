@@ -2,12 +2,12 @@
 # Overview
 This repository holds my implementation of a raytracer from this book https://www.gabrielgambetta.com/computer-graphics-from-scratch/
 Gabriel Gambetta has the implementation right here https://github.com/ggambetta/computer-graphics-from-scratch/blob/master/demos/raytracer-01.html
-The chapter on implementing the raytracer provides code for many of the operations, so much so you can implement your own raytracer without having to consult his code.  My implementation adds some extensions and features to the raytracer that are listed below. Take a look :D
+The chapter on implementing the raytracer provides code for many of the operations, so much so you can implement your own raytracer without having to consult his code.  My implementation adds some features to the raytracer that are listed below. Take a look :D
 
 ![raytracer/raytraced_image.png](https://github.com/Devolafriend/graphics-playground/blob/646d110d78f4b4506a250d9f84974040ec60bb06/raytracer/raytraced_image.png)
 
 # Color lighting
-The first extension I made to this raytracer was colored lighting. Now instead of having only a single light intensity factor that results in dimmer or brighter white light, the light intensity has a red, green, and blue component. 
+The first extension I made to this raytracer was colored lighting. Now instead of having only a single light intensity factor that results in a dimmer or brighter white light, the light intensity has a red, green, and blue component. 
 
 # Triangle Primitives
 This addition allows for the use of triangles as primitives in the raytracer. Previously the only other primitive was the sphere. This is important as triangles (and also quads) are the base primitives for many renderers. Every object can be broken down into triangles. Thus this allows for us to render more complex objects. The implementation of this was a fun learning experience. Only 1 function, the closestIntersection() function, needed to be modified and a new function, the intersectRayTriangle() function, was added. In order to implement this I had to test to see if the ray intersected with the plane a triangle layed on and then test to see if that intersection fell inside the triangle. To check if the point was inside the trianlge I originally opted for using a dot product test to see if the point was on the 'inside' of each of edges of the triangle, however I ran into some diffuculties with this implementation. I then found another solution here -- https://math.stackexchange.com/questions/4322/check-whether-a-point-is-within-a-3d-triangle -- that used barycentric coordinates that worked. 
