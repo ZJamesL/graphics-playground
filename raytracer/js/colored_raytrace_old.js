@@ -29,7 +29,7 @@ const spheres = [//new sphere([0, -1, 3], [255,   0, 255], 1, 500, 0.2),
                  new sphere([ 2, 0, 4], [255,   0,   0], 1, 10, 0.4)] 
                  //new sphere([0, -5001, 0], [0, 255, 255], 5000, 1000, 0.5)]
                  
-const lights = [new light('ambient', [0.1, 0.1, 0.1]),
+const lights = [new light('ambient', [0.3, 0.3, 0.3]),
                 new light('point', [0.5, 0.5, 0.5], [2, 1, -10]),
                 new light('directional', [0.0, 0.0, 0.9], null, [1, 4, 4])]
 const triangles = [new triangle([ [  2, -1,  6], 
