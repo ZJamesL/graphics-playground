@@ -1,3 +1,4 @@
+
 //////////////////////////////////////////////////////////////////////////////
 // Canvas Variables
 //////////////////////////////////////////////////////////////////////////////
@@ -7,61 +8,39 @@ const canvasBuffer = canvasContext.getImageData(0, 0, canvas.width, canvas.heigh
 const canvasRowPixelSize = canvasBuffer.width * 4 // size of 1 row of imageData array where 1 pixel is split into 4 datapoints 
 
 // the scene object 
+// TODO: make this a generic object and put it in objects.js 
+// gotta figure out how I want to refactor my code. All object constructor
+// in one place sounds kinda bad but having a different file for each category 
+// of object (light, vec3, sphere, etc) sounds a bit excessive at this stage
 let scene = {
-    spheres : [], 
+    spheres : [],
+    triangles : [], 
     lights : []
 }
 
-/**
- * This creates sphere objects
- * Center - array in the format of [x, y, z]
- * color - array in the format of [r, g, b]
- * radius - integer value for the radius
- * specular - how shiny the object is 
- * reflective - how reflective an object is 
- */
-let sphere = function(center, color, radius, specular, reflective){
-    this.center = center;
-    this.color = color;
-    this.radius = radius;
-    this.specular = specular;
-    this.reflective = reflective;
-}
-
-/**
- * This creates light objects
- * parameters:
- *      type: type of light -> point, ambient, directional
- *      intensity: 3 intensities of light for rgb, 0.0 to 1.0
- *      direction: direction of the light, array of 3 components (used by point and directional)
- *      position: position of the light, array of 3 components (used by point light)
- */
-let light = function(type, intensity, position = null, direction = null) {
-    this.type = type;
-    this.intensity = intensity;
-    if (position !== null){
-        this.position = position;
-    }
-    if (direction !== null){
-        this.direction = direction;
-    }
-}
 
 // camera, distance to viewport, spheres objects
 const camera = [0, 0, 0]
 const projectionPlaneZ = 1
 const viewportDimensions = 1
-const backgroundColor = [100, 100, 100]
-const spheres = [new sphere([0, -1, 3], [255,   0, 255], 1, 500, 0.2),
+const backgroundColor = [50, 50, 50]
+const spheres = [//new sphere([0, -1, 3], [255,   0, 255], 1, 500, 0.2),
                  new sphere([-2, 0, 4], [  0, 255,   0], 1, 500, 0.3),
-                 new sphere([2, 0, 4], [255,   0,   0], 1, 10, 0.4), 
-                 new sphere([0, -5001, 0], [0, 255, 255], 5000, 1000, 0.5)]
+                 new sphere([ 2, 0, 4], [255,   0,   0], 1, 10, 0.4)] 
+                 //new sphere([0, -5001, 0], [0, 255, 255], 5000, 1000, 0.5)]
                  
 const lights = [new light('ambient', [0.1, 0.1, 0.1]),
                 new light('point', [0.5, 0.5, 0.5], [2, 1, -10]),
-                new light('directional', [0.0, 0.0, 0.0], null, [1, 4, 4])]
-scene.lights = lights
-scene.spheres = spheres
+                new light('directional', [0.0, 0.0, 0.9], null, [1, 4, 4])]
+const triangles = [new triangle([ [  2, -1,  6], 
+                                  [  0,  2,  6], 
+                                  [ -2, -1,  6]], [0, 255, 0], 0.4, 0.8), 
+                   new triangle([ [  2, -1,  0], 
+                                  [  0, -1, 20], 
+                                  [ -2, -1,  0]], [255, 0, 255], 0.4, 0.8)]
+scene.lights = lights;
+scene.spheres = spheres;
+scene.triangles = triangles; 
 
 
 /**
@@ -135,6 +114,66 @@ function intersectRaySphere(O, D, sphere){
     return [t1, t2]
 }
 
+
+
+/**
+ * Traces the path of a ray to see what sphere it intersects with, if any. 
+ * Returns the 2 solutions to the quadratic equation derived from the 
+ * "Ray Meets Sphere" section of Gabriel Gambetta's book. 
+ * parameters: 
+ *      O - Camara position
+ *      D - vector between camera and point on viewpoint
+ *      tri - triangle being checked with
+ */
+function intersectRayTriangle(O, D, tri){
+    // first test to see the ray D is parallel to the tri 
+    let normalizedD = normalize(D);
+    let parallelTest = dotProduct(normalize(tri.normal), normalizedD)
+    if (parallelTest === 0){
+        // TODO: modify code so it handles tris on plane test 
+        return Infinity;
+    } 
+    // calculate the intersection  
+    let numerator = dotProduct(vecSub(tri.points[0], O), tri.normal);
+    let denominator = dotProduct(D, tri.normal)
+    if (denominator === 0) {
+        return Infinity;
+    }
+    let t = numerator / denominator; 
+    if (t < 0 ) {
+        return Infinity;
+    }
+    // now test to see if the point is in the triangle using barycentric coorindates
+    let intersectPoint = vecAdd(O, vecScalarMult(D, t));
+    if (intersectPoint[2] !== 6){
+        console.log(`third component did not equal 6, it's ${intersectPoint[2]}`);
+    }
+    let AB = vecSub(tri.points[1], tri.points[0]);
+    let AC = vecSub(tri.points[2], tri.points[0]);
+    let PA = vecSub(tri.points[0], intersectPoint);
+    let PB = vecSub(tri.points[1], intersectPoint);
+    let PC = vecSub(tri.points[2], intersectPoint);
+
+    let areaABC = magnitude(crossProduct(AB, AC)) / 2// multiplied by 2
+    let areaCPB = magnitude(crossProduct(PB, PC)) 
+    let alpha = areaCPB / (areaABC * 2);
+    let areaAPC = magnitude(crossProduct(PC, PA)) 
+    let beta  = areaAPC / (areaABC * 2);
+    let areaAPB = magnitude(crossProduct(PB, PA))
+    let gamma = areaAPB / (areaABC * 2);
+    let weightSum = alpha + beta + gamma 
+    // note: I believe floating point numbers may lead to some inaccuracy here 
+    // that is why I am skipping the alpha + beta + gamma === 1 check here for now 
+    if ( ( 0 <= alpha && alpha <= 1 ) && 
+         ( 0 <= beta  && beta  <= 1 ) && 
+         ( 0 <= gamma && gamma <= 1 ) && 
+         ( weightSum >= .99999 && weightSum <= 1.0001 )){
+        return t;
+    } 
+    // failure: return inifinity 
+    return Infinity; 
+}
+
 /**
  * Computes the reflection of a ray R with respect to 
  * a normal N
@@ -148,37 +187,64 @@ function reflectRay (R, N){
 
 /**
  * Computes the closest intersection with a sphere for a given ray
- * D. 
+ * D. Then parameter anyIntersection is set to true then it just checks 
+ * for any intersection
  * parameters 
  *      O - starting point 
  *      D - the ray we are using to find intersections
  *      tMin - the minimum factor of the parameter t 
  *      tMax - the maximum factor the the parameter t 
+ *      anyIntersectio - boolean that when set to true changes 
+ *          logic of this function to return a boolean if there 
+ *          is any intersection at all. 
  * returns: array --> [closestSphere, closestT]
  */
-function closestIntersection(O, D, tMin, tMax) {
+function closestIntersection(O, D, tMin, tMax, anyIntersection) {
     // set up the variables that hold the closest sphere and the closest 
     // intersection 
     let closestT = Infinity
-    let closestSphere = null
+    let closestObject = null
     // iterate through each of the spheres and see if the ray, D, we sent 
     // out from the camera, O, intersects with any of them
     for (let sphere of scene.spheres){
         // intersection function gives us an array of 2 answers to 
         // the closest 
         ts = intersectRaySphere(O, D, sphere)
-        if ( ts[0] != null && (ts[0] >= tMin && ts[0] < tMax) && ts[0] < closestT ) {
+        if ( (ts[0] >= tMin && ts[0] < tMax) && ts[0] < closestT ) {
             closestT  = ts[0]
-            closestSphere = sphere
+            closestObject = sphere
         }
-        if ( ts[1] != null && (ts[1] > tMin && ts[1] < tMax) && ts[1] < closestT ) {
+        if ( (ts[1] >= tMin && ts[1] < tMax) && ts[1] < closestT ) {
             closestT  = ts[1]
-            closestSphere = sphere
+            closestObject = sphere
+        }
+        if (anyIntersection && closestObject !== null){
+            return true
         }
     }
-    return [closestSphere, closestT]
-}
 
+    // check for triangle intersections
+    for (let tri of scene.triangles){
+        t = intersectRayTriangle(O, D, tri);
+        if ( (t >= tMin && t < tMax) && t < closestT ) {
+            closestT  = t
+            closestObject = tri
+        }
+        if ( (t >= tMin && t < tMax) && t < closestT ) {
+            closestT  = ts[1]
+            closestObject = tri
+        }
+        if (anyIntersection && closestObject !== null){
+            return true
+        }
+    }
+    
+    // reaching here means there was no intersection 
+    if (anyIntersection){
+        return false
+    }
+    return [closestObject, closestT]
+}
 
 /**
  * Computes the intensity of light on a single pixel. It loops 
@@ -209,8 +275,8 @@ function computeLighting(P, N, V, s){
             }
 
             // check for shadows
-            let [closestSphere, closestT] = closestIntersection(P, L, 0.000001, Infinity)
-            if ( closestSphere !== null ){
+            let anyIntersection = closestIntersection(P, L, 0.000001, Infinity, true)
+            if (anyIntersection){
                 continue;
             }
 
@@ -255,22 +321,28 @@ function computeLighting(P, N, V, s){
 function traceRay(O, D, tMin, tMax, recursionDepth){
     // set up the variables that hold the closest sphere and the closest 
     // intersection, then run the closestIntersection variable
-    let [closestSphere, closestT] = closestIntersection(O, D, tMin, tMax)
-    if (closestSphere == null){
+    let [closestObject, closestT] = closestIntersection(O, D, tMin, tMax)
+    if (closestObject == null){
         return backgroundColor
     }
     // calculate the intersection point of the ray and the sphere 
     let P = vecAdd(O, vecScalarMult(D, closestT))
-    // calculate the normal of the surface of the sphere at point P and normalize it 
-    let N = vecSub(P, closestSphere.center)
-    N = vecDivision(N, magnitude(N))
-    let RGBintensityFactors = computeLighting(P, N, [-D[0], -D[1], -D[2]], closestSphere.specular)
-    let localRColor = closestSphere.color[0] * RGBintensityFactors[0]
-    let localGColor = closestSphere.color[1] * RGBintensityFactors[1]
-    let localBColor = closestSphere.color[2] * RGBintensityFactors[2]
-
+    // calculate the normal of the surface of the sphere at point P and normalize it
+    let N;
+    if (closestObject.hasOwnProperty('center')){
+        N = vecSub(P, closestObject.center);
+        N = vecDivision(N, magnitude(N));
+    } else {
+        N = closestObject.normal;
+    }
+    
+    let RGBintensityFactors = computeLighting(P, N, [-D[0], -D[1], -D[2]], closestObject.specular)
+    let localRColor = closestObject.color[0] * RGBintensityFactors[0]
+    let localGColor = closestObject.color[1] * RGBintensityFactors[1]
+    let localBColor = closestObject.color[2] * RGBintensityFactors[2]
+    
     // if we hit the recursion limit or the object is non reflective then we are done 
-    r = closestSphere.reflective
+    r = closestObject.reflective
     if (r <= 0 || recursionDepth <= 0){
         return [localRColor, localGColor, localBColor]
     }
@@ -283,6 +355,7 @@ function traceRay(O, D, tMin, tMax, recursionDepth){
     let rWeightedAve =  ( localRColor * (1-r) ) + (reflectedColors[0] * r)
     let gWeightedAve =  ( localGColor * (1-r) ) + (reflectedColors[1] * r)
     let bWeightedAve =  ( localBColor * (1-r) ) + (reflectedColors[2] * r)
+
     return [rWeightedAve, gWeightedAve, bWeightedAve]
 }
 

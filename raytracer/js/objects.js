@@ -60,8 +60,8 @@ let triangle = function(points, color, specular, reflective) {
  * parameters:
  *      type: type of light -> point, ambient, directional
  *      intensity: 3 intensities of light for rgb, 0.0 to 1.0
- *      direction: direction of the light, array of 3 components (used by point and directional)
- *      position: position of the light, array of 3 components (used by point light)
+ *      direction: direction of the light, vec3 (used by point and directional)
+ *      position: position of the light, vec3 (used by point light)
  */
 let light = function(type, intensity, position = null, direction = null) {
     this.type = type;

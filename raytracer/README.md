@@ -1,8 +1,14 @@
 
 # Overview
-This repository hold my implementation of raytracer from this book https://www.gabrielgambetta.com/computer-graphics-from-scratch/
+This repository holds my implementation of a raytracer from this book https://www.gabrielgambetta.com/computer-graphics-from-scratch/
 Gabriel Gambetta has the implementation right here https://github.com/ggambetta/computer-graphics-from-scratch/blob/master/demos/raytracer-01.html
-The chapter on implementing the raytracer provides code for many of the operations, so much so you can implement your own raytracer without having to consult his implemenation. 
+The chapter on implementing the raytracer provides code for many of the operations, so much so you can implement your own raytracer without having to consult his code.  My implementation adds some extensions and features to the raytracer that are listed below. Take a look :D
 
-# basic_raytracer.js and basic_raytracer_improved.js
-basic_raytracer.js is my attempt at implementing a raytracer just from the "Basic Raytracing" chapter without consulting the code linked in "overview" except for a quick glance to start off. basic_rayracer_improved.js is the implementation of the raytracer after I completed basic_raytracer.js and looked over Gabriel Gambetta's implementation and incorporated code from his that I think is better than what I did. Both of these raytracers can be seen in action on the raytrace.html page. 
+# Color lighting
+The first extension I made to this raytracer was colored lighting. Now instead of having only a single light intensity factor that results in dimmer or brighter white light, the light intensity has a red, green, and blue component. 
+
+# Triangle Primitives
+This addition allows for the use of triangles as primitives in the raytracer. Previously the only other primitive was the sphere. This is important as triangles (and also quads) are the base primitives for many renderers. Every object can be broken down into triangles. Thus this allows for us to render more complex objects. The implementation of this was a fun learning experience. Only 1 function, the closestIntersection() function, needed to be modified and a new function, the intersectRayTriangle() function, was added. In order to implement this I had to test to see if the ray intersected with the plane a triangle layed on and then test to see if that intersection fell inside the triangle. To check if the point was inside the trianlge I originally opted for using a dot product test to see if the point was on the 'inside' of each of edges of the triangle, however I ran into some diffuculties with this implementation. I then found another solution here -- https://math.stackexchange.com/questions/4322/check-whether-a-point-is-within-a-3d-triangle -- that used barycentric coordinates that worked. 
+
+# vec3 code refactor 
+The last addition I did was that I added an object type called a vec3 which just a vector of 3 components - x, y, and z. With this I replaced almost every instance of any array of 3 values - such as in the object positions, colors, and vector math - with vector 3. I did this originally just to help make the code more comprehensible and cleaner, however what I didn't expect was that this made the raytracer run much **much** faster. Have a look for yourself. There are 2 html files, colored_raytracer.html and color_raytracer_old.html. The latter is the old implementation that just used arrays of length 3 the the former is the one that has vec3 support added. The newer version is much faster. 

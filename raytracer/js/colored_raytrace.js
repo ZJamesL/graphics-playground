@@ -20,24 +20,24 @@ let scene = {
 
 
 // camera, distance to viewport, spheres objects
-const camera = [0, 0, 0]
+const camera = new vec3(0, 0, 0)
 const projectionPlaneZ = 1
 const viewportDimensions = 1
-const backgroundColor = [50, 50, 50]
-const spheres = [//new sphere([0, -1, 3], [255,   0, 255], 1, 500, 0.2),
-                 new sphere([-2, 0, 4], [  0, 255,   0], 1, 500, 0.3),
-                 new sphere([ 2, 0, 4], [255,   0,   0], 1, 10, 0.4)] 
+const backgroundColor = new vec3(0, 0, 0)
+const spheres = [//new sphere(new vec3(0, -1, 3), new vec3(255,   0, 255), 1, 500, 0.2),
+                 new sphere(new vec3(-2, 0, 4), new vec3(  0, 255,   0), 1, 500, 0.3),
+                 new sphere(new vec3( 2, 0, 4), new vec3(255,   0,   0), 1, 10, 0.4)] 
                  //new sphere([0, -5001, 0], [0, 255, 255], 5000, 1000, 0.5)]
-                 
-const lights = [new light('ambient', [0.1, 0.1, 0.1]),
-                new light('point', [0.5, 0.5, 0.5], [2, 1, -10]),
-                new light('directional', [0.0, 0.0, 0.9], null, [1, 4, 4])]
-const triangles = [new triangle([ [  2, -1,  6], 
-                                  [  0,  2,  6], 
-                                  [ -2, -1,  6]], [0, 255, 0], 0.4, 0.8), 
-                   new triangle([ [  2, -1,  0], 
-                                  [  0, -1, 20], 
-                                  [ -2, -1,  0]], [255, 0, 255], 0.4, 0.8)]
+                  
+const lights = [new light('ambient',    new vec3(0.1, 0.1, 0.1) ),
+                new light('point',       new vec3(0.7, 0.7, 0.7), new vec3(2, 1, -10)),
+                new light('directional', new vec3(0.0, 0.0, 0.9), null, new vec3(1, 4, 4))]
+const triangles = [new triangle([ new vec3(  2, -1,  6), 
+                                  new vec3(  0,  2,  6), 
+                                  new vec3( -2, -1,  6)], new vec3(0, 255, 0), 0.4, 0.8), 
+                   new triangle([ new vec3(  2, -1,  0), 
+                                  new vec3(  0, -1, 20), 
+                                  new vec3( -2, -1,  0)], new vec3(255, 0, 255), 0.4, 0.8)]
 scene.lights = lights;
 scene.spheres = spheres;
 scene.triangles = triangles; 
@@ -74,18 +74,18 @@ function drawPixel(x, y, color) {
     // offset gives us the offset into the 1d array of rgba pixel data for the 
     // data image object
     let offset = 4 * x + canvasRowPixelSize * y
-    canvasBuffer.data[offset++] = color[0]
-    canvasBuffer.data[offset++] = color[1]
-    canvasBuffer.data[offset++] = color[2]
+    canvasBuffer.data[offset++] = color.x
+    canvasBuffer.data[offset++] = color.y
+    canvasBuffer.data[offset++] = color.z
     canvasBuffer.data[offset++] = 255 // full alpha
 }
 
 // gets the vector between the viewport point and canvas
 function canvasToViewport(x, y){
     //return [(x - camera[0]) / canvas.width, (y - camera[1]) / canvas.height, 1]
-    return [x * viewportDimensions / canvas.width,
+    return new vec3(x * viewportDimensions / canvas.width,
             y * viewportDimensions / canvas.height,
-            projectionPlaneZ]
+            projectionPlaneZ);
 }
 
 /**
@@ -126,13 +126,14 @@ function intersectRaySphere(O, D, sphere){
  *      tri - triangle being checked with
  */
 function intersectRayTriangle(O, D, tri){
-    // first test to see the ray D is parallel to the tri 
-    let normalizedD = normalize(D);
-    let parallelTest = dotProduct(normalize(tri.normal), normalizedD)
-    if (parallelTest === 0){
-        // TODO: modify code so it handles tris on plane test 
-        return Infinity;
-    } 
+    // // first test to see the ray D is parallel to the tri 
+    // let normalizedD = normalize(D);
+    // let normalizedTriNor = normalize(tri.normal);
+    // let parallelTest = dotProduct(tri.normal, D)
+    // if (parallelTest === 0){
+    //     // TODO: modify code so it handles tris on plane test 
+    //     return Infinity;
+    // } 
     // calculate the intersection  
     let numerator = dotProduct(vecSub(tri.points[0], O), tri.normal);
     let denominator = dotProduct(D, tri.normal)
@@ -145,9 +146,6 @@ function intersectRayTriangle(O, D, tri){
     }
     // now test to see if the point is in the triangle using barycentric coorindates
     let intersectPoint = vecAdd(O, vecScalarMult(D, t));
-    if (intersectPoint[2] !== 6){
-        console.log(`third component did not equal 6, it's ${intersectPoint[2]}`);
-    }
     let AB = vecSub(tri.points[1], tri.points[0]);
     let AC = vecSub(tri.points[2], tri.points[0]);
     let PA = vecSub(tri.points[0], intersectPoint);
@@ -224,14 +222,10 @@ function closestIntersection(O, D, tMin, tMax, anyIntersection) {
     }
 
     // check for triangle intersections
-    for (let tri of scene.triangles){
+    for (let tri of scene.triangles){ 
         t = intersectRayTriangle(O, D, tri);
         if ( (t >= tMin && t < tMax) && t < closestT ) {
             closestT  = t
-            closestObject = tri
-        }
-        if ( (t >= tMin && t < tMax) && t < closestT ) {
-            closestT  = ts[1]
             closestObject = tri
         }
         if (anyIntersection && closestObject !== null){
@@ -263,9 +257,9 @@ function computeLighting(P, N, V, s){
     let b = 0.0
     for (let light of scene.lights){
         if (light.type === 'ambient'){
-            r += light.intensity[0]
-            g += light.intensity[1]
-            b += light.intensity[2]
+            r += light.intensity.x
+            g += light.intensity.y
+            b += light.intensity.z
         } else {
             let L;
             if (light.type === 'point') { 
@@ -286,9 +280,9 @@ function computeLighting(P, N, V, s){
             let nlDotProduct = dotProduct(N, L)
             if (nlDotProduct > 0){
                 right = ( nlDotProduct / (magnitude(N) * magnitude(L) ) )
-                r += light.intensity[0] * right
-                g += light.intensity[1] * right
-                b += light.intensity[2] * right
+                r += light.intensity.x * right
+                g += light.intensity.y * right
+                b += light.intensity.z * right
             }
 
             // specular
@@ -296,15 +290,15 @@ function computeLighting(P, N, V, s){
                 let R = reflectRay(L, N)
                 let rDotV = dotProduct(R, V)
                 if (rDotV > 0) {
-                    x = Math.pow(rDotV / (magnitude(R) * magnitude(V)), s)
-                    r += light.intensity[0] * x
-                    g += light.intensity[1] * x
-                    b += light.intensity[2] * x
+                    spec = Math.pow(rDotV / (magnitude(R) * magnitude(V)), s)
+                    r += light.intensity.x * spec
+                    g += light.intensity.y * spec
+                    b += light.intensity.z * spec
                 }
             }
         }
     }
-    return [r, g, b]
+    return new vec3(r, g, b)
 }
 
 /**
@@ -313,16 +307,16 @@ function computeLighting(P, N, V, s){
  * nothing
  * parameters: 
  *      O - Camara position
- *      D - vector between camera and point on viewpoint
+ *      D - vec3 aka vector between camera and point on viewpoint
  *      tMin - minimum render distance 
  *      tMax - maximum render distance 
  *      recursionDepth - the depth of recursion
  */
-function traceRay(O, D, tMin, tMax, recursionDepth){
+function traceRay(O, D, tMin, tMax, recursionDepth, x, y){
     // set up the variables that hold the closest sphere and the closest 
     // intersection, then run the closestIntersection variable
-    let [closestObject, closestT] = closestIntersection(O, D, tMin, tMax)
-    if (closestObject == null){
+    let [closestObject, closestT] = closestIntersection(O, D, tMin, tMax);
+    if (closestObject === null){
         return backgroundColor
     }
     // calculate the intersection point of the ray and the sphere 
@@ -331,32 +325,31 @@ function traceRay(O, D, tMin, tMax, recursionDepth){
     let N;
     if (closestObject.hasOwnProperty('center')){
         N = vecSub(P, closestObject.center);
-        N = vecDivision(N, magnitude(N));
+        N = normalize(N);
     } else {
         N = closestObject.normal;
     }
     
-    let RGBintensityFactors = computeLighting(P, N, [-D[0], -D[1], -D[2]], closestObject.specular)
-    let localRColor = closestObject.color[0] * RGBintensityFactors[0]
-    let localGColor = closestObject.color[1] * RGBintensityFactors[1]
-    let localBColor = closestObject.color[2] * RGBintensityFactors[2]
+    let RGBintensityFactors = computeLighting(P, N, new vec3(-D.x, -D.y, -D.z), closestObject.specular);
+    let localRColor = closestObject.color.x * RGBintensityFactors.x;
+    let localGColor = closestObject.color.y * RGBintensityFactors.y;
+    let localBColor = closestObject.color.z * RGBintensityFactors.z;
     
     // if we hit the recursion limit or the object is non reflective then we are done 
-    r = closestObject.reflective
+    let r = closestObject.reflective;
     if (r <= 0 || recursionDepth <= 0){
-        return [localRColor, localGColor, localBColor]
+        return new vec3(localRColor, localGColor, localBColor);
     }
 
     // compute the reflected color 
-    let R = reflectRay([-D[0], -D[1], -D[2]], N)
-    let reflectedColors = traceRay(P, R, 0.00001, Infinity, recursionDepth - 1)
-    
+    let R = reflectRay(new vec3(-D.x, -D.y, -D.z), N);
+    let reflectedColors = traceRay(P, R, 0.00001, Infinity, recursionDepth - 1);
     // compute the weighted average for each color and return that 
-    let rWeightedAve =  ( localRColor * (1-r) ) + (reflectedColors[0] * r)
-    let gWeightedAve =  ( localGColor * (1-r) ) + (reflectedColors[1] * r)
-    let bWeightedAve =  ( localBColor * (1-r) ) + (reflectedColors[2] * r)
+    let rWeightedAve =  ( localRColor * (1-r) ) + (reflectedColors.x * r);
+    let gWeightedAve =  ( localGColor * (1-r) ) + (reflectedColors.y * r);
+    let bWeightedAve =  ( localBColor * (1-r) ) + (reflectedColors.z * r);
 
-    return [rWeightedAve, gWeightedAve, bWeightedAve]
+    return new vec3(rWeightedAve, gWeightedAve, bWeightedAve);
 }
 
 function updateCanvas(){
@@ -370,8 +363,8 @@ function updateCanvas(){
 function main(){
     for (let x = -canvas.width/2; x < canvas.width/2; x++){
         for (let y = -canvas.height/2; y < canvas.height/2; y++){
-            let D = canvasToViewport(x, y)
-            let color = traceRay(camera, D, 1, Infinity, 1)
+            let D = canvasToViewport(x, y);
+            let color = traceRay(camera, D, 1, Infinity, 1, x, y);
             drawPixel(x, y, color)
         }
     }
