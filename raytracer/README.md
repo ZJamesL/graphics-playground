@@ -4,7 +4,7 @@ This repository holds my implementation of a raytracer from this book https://ww
 Gabriel Gambetta has the implementation right here https://github.com/ggambetta/computer-graphics-from-scratch/blob/master/demos/raytracer-01.html
 The chapter on implementing the raytracer provides code for many of the operations, so much so you can implement your own raytracer without having to consult his code.  My implementation adds some extensions and features to the raytracer that are listed below. Take a look :D
 
-![raytraced image]([raytracer/raytraced_image.png](https://github.com/Devolafriend/graphics-playground/blob/646d110d78f4b4506a250d9f84974040ec60bb06/raytracer/raytraced_image.png))
+![raytracer/raytraced_image.png](https://github.com/Devolafriend/graphics-playground/blob/646d110d78f4b4506a250d9f84974040ec60bb06/raytracer/raytraced_image.png)
 
 # Color lighting
 The first extension I made to this raytracer was colored lighting. Now instead of having only a single light intensity factor that results in dimmer or brighter white light, the light intensity has a red, green, and blue component. 
