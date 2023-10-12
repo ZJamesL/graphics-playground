@@ -89,10 +89,6 @@ function normalize(vec) {
  */
 function crossProduct(v, w) {
     // soon to uncomment after code refactor 
-    //let x = v.y * w.z - v.z * w.y;
-    //let y = v.z * w.x - v.x * w.z; 
-    //let z = v.x * w.y - v.y * w.x;
-    //let normal = new vec3(x, y, z);
     let x = v.y * w.z - v.z * w.y;
     let y = v.z * w.x - v.x * w.z;
     let z = v.x * w.y - v.y * w.x;

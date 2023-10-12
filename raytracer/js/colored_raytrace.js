@@ -7,34 +7,32 @@ const canvasContext = canvas.getContext("2d");
 const canvasBuffer = canvasContext.getImageData(0, 0, canvas.width, canvas.height)
 const canvasRowPixelSize = canvasBuffer.width * 4 // size of 1 row of imageData array where 1 pixel is split into 4 datapoints 
 
-// the scene object 
-// TODO: make this a generic object and put it in objects.js 
-// gotta figure out how I want to refactor my code. All object constructor
-// in one place sounds kinda bad but having a different file for each category 
-// of object (light, vec3, sphere, etc) sounds a bit excessive at this stage
+/////////////////////////////////////////////////////////////////////////////
+// Scene Setup
+/////////////////////////////////////////////////////////////////////////////
 let scene = {
-    spheres : [],
+    spheres :   [],
     triangles : [], 
-    lights : []
+    lights :    []
 }
 
-
-// camera, distance to viewport, spheres objects
-const camera = new vec3(0, 0, 0)
-const projectionPlaneZ = 1
-const viewportDimensions = 1
-const backgroundColor = new vec3(0, 0, 0)
-const spheres = [//new sphere(new vec3(0, -1, 3), new vec3(255,   0, 255), 1, 500, 0.2),
-                 new sphere(new vec3(-2, 0, 4), new vec3(  0, 255,   0), 1, 500, 0.3),
-                 new sphere(new vec3( 2, 0, 4), new vec3(255,   0,   0), 1, 10, 0.4)] 
-                 //new sphere([0, -5001, 0], [0, 255, 255], 5000, 1000, 0.5)]
-                  
-const lights = [new light('ambient',    new vec3(0.4, 0.4, 0.4) ),
+const camera = new vec3(0, 0, 0);
+const projectionPlaneZ = 1;
+const viewportDimensions = 1;
+const backgroundColor = new vec3(41, 0, 51);
+const spheres = [new sphere(new vec3(-2, 0, 4), new vec3(  0, 255,   0), 1, 500, 0.3),
+                 new sphere(new vec3( 5, 7, 20), new vec3(  0, 255, 255), 1, 500, 0.3),
+                 new sphere(new vec3(-6, 6, 20), new vec3(100, 0, 255), 2, 1000, 0.4),
+                 new sphere(new vec3( 2, 0, 4), new vec3(255,   0,   0), 1, 10, 0.6)]      
+const lights = [new light('ambient',     new vec3(0.4, 0.4, 0.4) ),
                 new light('point',       new vec3(0.7, 0.7, 0.7), new vec3(2, 1, -10)),
                 new light('directional', new vec3(0.4, 0.4, 0.9), null, new vec3(1, 4, 4))]
 const triangles = [new triangle([ new vec3(  2, -1,  6), 
-                                  new vec3(  0,  2,  6), 
+                                  new vec3(  0,1.5,  6), 
                                   new vec3( -2, -1,  6)], new vec3(0, 255, 0), 0.4, 0.8), 
+                   new triangle([ new vec3(  2,  -2,  1), 
+                                  new vec3(  0,-0.5,  1), 
+                                  new vec3( -2,  -2,  1)], new vec3(255, 0, 0), 0.4, 0.5),
                    new triangle([ new vec3(  2, -1,  0), 
                                   new vec3(  0, -1, 20), 
                                   new vec3( -2, -1,  0)], new vec3(255, 0, 255), 0.4, 0.8)]
@@ -82,7 +80,6 @@ function drawPixel(x, y, color) {
 
 // gets the vector between the viewport point and canvas
 function canvasToViewport(x, y){
-    //return [(x - camera[0]) / canvas.width, (y - camera[1]) / canvas.height, 1]
     return new vec3(x * viewportDimensions / canvas.width,
             y * viewportDimensions / canvas.height,
             projectionPlaneZ);
@@ -126,14 +123,6 @@ function intersectRaySphere(O, D, sphere){
  *      tri - triangle being checked with
  */
 function intersectRayTriangle(O, D, tri){
-    // // first test to see the ray D is parallel to the tri 
-    // let normalizedD = normalize(D);
-    // let normalizedTriNor = normalize(tri.normal);
-    // let parallelTest = dotProduct(tri.normal, D)
-    // if (parallelTest === 0){
-    //     // TODO: modify code so it handles tris on plane test 
-    //     return Infinity;
-    // } 
     // calculate the intersection  
     let numerator = dotProduct(vecSub(tri.points[0], O), tri.normal);
     let denominator = dotProduct(D, tri.normal)
@@ -364,7 +353,7 @@ function main(){
     for (let x = -canvas.width/2; x < canvas.width/2; x++){
         for (let y = -canvas.height/2; y < canvas.height/2; y++){
             let D = canvasToViewport(x, y);
-            let color = traceRay(camera, D, 1, Infinity, 1, x, y);
+            let color = traceRay(camera, D, 1, Infinity, 2, x, y);
             drawPixel(x, y, color)
         }
     }
